@@ -3,9 +3,7 @@ Program for controlling the IMU connected to Pi_1
 """
 
 import smbus
-import timeit
 from LSM9DS0 import *
-import datetime
 
 class IMU():
     

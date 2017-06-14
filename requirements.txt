@@ -1,1 +1,4 @@
 python3-rpi.gpio
+python3-smbus
+python3-dev
+i2c-tools

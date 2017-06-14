@@ -20,11 +20,12 @@ GPIO.setup(40, GPIO.OUT)
 for i in range(0,5):
     print('Flashing LEDs')
     GPIO.output(40,GPIO.LOW)
-    time.sleep(2)
+    time.sleep(0.1)
     GPIO.output(40,GPIO.HIGH)
-    time.sleep(2)
+    time.sleep(0.1)
 
 while 1:
+    #Wait for button to be pressed
     button = GPIO.input(35)
     if button == 1:
         break
@@ -45,10 +46,15 @@ while 1:
     #TODO Communicate with ground before lift-off
     Message = 'Some data to send'
     Response = REXUS_Comm.communicate(Message)
-    
     #TODO Check for Software Test Mode- REXUS?
-    #TODO Check for command to start camera    
+    if Response == 'Test Mode':
+        break
+    #TODO Check for command to start camera  
+    if Response == 'T-10':
+        #TODO Activate Camera
+        break
     #TODO Check for Lift-off GPIO
+    
     break
 
 
