@@ -11,6 +11,7 @@ from REXUS import REXUS
 import IMU_1
 
 #Setup all the pins on the Pi
+print('Setting up GPIO Pins')
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(21, GPIO.OUT)
@@ -18,6 +19,7 @@ GPIO.setup(18, GPIO.IN)
 
 #Flash some LED's
 for i in range(0,10):
+    print('Flashing LEDs')
     GPIO.output(19,1)
     GPIO.output(21,0)
     time.sleep(1)
