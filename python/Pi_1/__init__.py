@@ -26,8 +26,7 @@ for i in range(0,5):
 
 while 1:
     button = GPIO.input(35)
-    print(button)
-    if button = 1:
+    if button == 1:
         break
 
 GPIO.output(40,GPIO.LOW)
