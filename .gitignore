@@ -1,3 +1,7 @@
+# Video Files
+PiCam_Vid/
+PiCam_Img/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

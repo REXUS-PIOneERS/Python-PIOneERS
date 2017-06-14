@@ -8,8 +8,8 @@ import os
 
 def ensure_dir(file_path):
     #Creates a directory if it doesn't exist from a Path variable
-    if not file_path.parent.exists():
-        file_path.parent.mkdir(parents=True)
+    if file_path.exists() == False:
+        file_path.mkdir(parents=True)
     
 
 class PiCam():
@@ -34,17 +34,17 @@ class PiCam():
     
     def _cut_video(self, length, file_name):
         '''Records a video of the given length cur into segments'''
+        print('creating cut video-length: {}, cut: {}'.format(length,self.video_cut))
+        camera = picamera.PiCamera(resolution=self.resolution, framerate=20)
         n = 1
-        file_name = 'PiCam_Vid/{}_{}.h264'.format(file_name,n)
-        n += 1
-        camera = picamera.Picamera(resolution=self.resolution)
-        camera.start_recording(file_name)
+        camera.start_recording('PiCam_Vid/{}_{}.h264'.format(file_name,n))
         total_time = 0
-        while (total_time - self.video_cut) >= 0:
+        while (total_time+self.video_cut)<= length:
             camera.wait_recording(self.video_cut)
-            camera.split_recording('PiCam_Vid/{}_{}.h264'.format(file_name,n))
+            print('splitting recording:',n)
             n += 1
-            total_time += self.video_cut
+            camera.split_recording('PiCam_Vid/{}_{}.h264'.format(file_name,n))
+            total_time = total_time+self.video_cut
         camera.wait_recording(length - total_time)
         camera.stop_recording()
         
@@ -52,7 +52,7 @@ class PiCam():
     def _one_video(self, length, file_name):
         '''Record a video and store as one file'''
         file_name = '{}.h264'.format(file_name)
-        camera = picamera.Picamera(resolution=self.resolution)
+        camera = picamera.PiCamera(resolution=self.resolution)
         camera.start_recording(file_name)
         camera.wait_recording(length)
         camera.stop_recording()
