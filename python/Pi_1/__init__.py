@@ -38,6 +38,7 @@ while 1:
     #TODO Communicate with ground before lift-off
     Message = 'Some data to send'
     Response = REXUS_Comm.communicate(Message)
+    break
     #TODO Check for Software Test Mode- REXUS?
     #TODO Check for command to start camera    
     #TODO Check for Lift-off GPIO
