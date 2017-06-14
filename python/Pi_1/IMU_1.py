@@ -16,4 +16,3 @@ def take_measurements(n):
             print('Gyr', j, imu.readGyrAxis(j))
             print('Mag', j, imu.readMagAxis(j))
         time.sleep(0.5)
-            
