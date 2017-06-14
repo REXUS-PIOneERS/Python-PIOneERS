@@ -12,7 +12,7 @@ import IMU_1
 
 #Setup all the pins on the Pi
 print('Setting up GPIO Pins')
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(21, GPIO.OUT)
 GPIO.setup(18, GPIO.IN)
