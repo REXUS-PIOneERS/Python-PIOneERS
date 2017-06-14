@@ -30,8 +30,10 @@ while 1:
         break
 
 GPIO.output(40,GPIO.LOW)
-
 GPIO.cleanup()
+
+IMU_1.take_measurements()
+
 #TODO create REXUS class for communicating with ground
 REXUS_Comm = REXUS()
 
