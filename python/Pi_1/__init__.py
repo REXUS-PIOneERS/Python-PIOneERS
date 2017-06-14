@@ -9,6 +9,7 @@ import time
 #Imports of local files and classes
 from REXUS import REXUS
 import IMU_1
+from PiCam import PiCam
 
 #Setup all the pins on the Pi
 print('Setting up GPIO Pins')
@@ -34,6 +35,9 @@ GPIO.output(40,GPIO.LOW)
 GPIO.cleanup()
 
 IMU_1.take_measurements(10)
+camera = PiCam()
+camera.video_cut = 5
+camera.video(20,'test')
 
 #TODO create REXUS class for communicating with ground
 REXUS_Comm = REXUS()
