@@ -12,21 +12,22 @@ import IMU_1
 
 #Setup all the pins on the Pi
 print('Setting up GPIO Pins')
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(19, GPIO.OUT)
-GPIO.setup(21, GPIO.OUT)
-GPIO.setup(18, GPIO.IN)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(35, GPIO.OUT)
+GPIO.setup(40, GPIO.OUT)
+GPIO.setup(12, GPIO.IN)
 
 #Flash some LED's
-for i in range(0,10):
+for i in range(0,5):
     print('Flashing LEDs')
-    GPIO.output(19,1)
-    GPIO.output(21,0)
-    time.sleep(1)
-    GPIO.output(19,0)
-    GPIO.output(21,1)
-    
+    GPIO.output(35,GPIO.HIGH)
+    GPIO.output(40,GPIO.LOW)
+    time.sleep(2)
+    GPIO.output(35,GPIO.LOW)
+    GPIO.output(40,GPIO.HIGH)
+    time.sleep(2)    
 
+GPIO.cleanup()
 #TODO create REXUS class for communicating with ground
 REXUS_Comm = REXUS()
 
