@@ -24,8 +24,11 @@ for i in range(0,5):
     GPIO.output(40,GPIO.HIGH)
     time.sleep(2)
 
-while not GPIO.input(35):
-    continue
+while 1:
+    button = GPIO.input(35)
+    print(button)
+    if button = 1:
+        break
 
 GPIO.output(40,GPIO.LOW)
 
