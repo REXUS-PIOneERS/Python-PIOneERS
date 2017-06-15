@@ -18,9 +18,9 @@ REXUS_SOE = 38
 REXUS_SODS = 36
 OUT_LED = 37
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.setup(OUT_LED, GPIO.OUT)
 
 #Setup classes for REXUS, IMU and PiCam
@@ -39,28 +39,32 @@ def flash_led():
 
 def start_of_data_storage():
     '''Backs up data between both Pi's'''
+    print('Start of data storage')
     flash_led()
     
 
 def start_of_experiment():
     '''Runs at start of experiment i.e. Nose Cone Ejection'''
+    print('start of experiment')
     flash_led()
     #Activate the IMU
     IMU_1.take_measurements(10)
     #TODO Motor Deplyment
-    GPIO.wait_for_edge(REXUS_SODS, GPIO.RISING)
+    while not GPIO.input(REXUS_SODS):
+        time.sleep(0.1)
     start_of_data_storage()
         
 
 def lift_off():
     '''Program that runs after the rocket lifts off'''
+    print('LIFT OFF!!!')
     flash_led()
     if not PiCam_1.active:
         PiCam_1.video(10,'LO_test')
-    while 1:
+    while not GPIO.input(REXUS_SOE):
         #TODO Send occasional messages to ground reporting status
-        if GPIO.input(REXUS_SOE):
-            start_of_experiment()
+        time.sleep(0.1)
+    start_of_experiment()
 
 def main():
     '''Main entry point for the probram'''
@@ -77,6 +81,12 @@ def main():
             PiCam_1.video(10,'test')
         if GPIO.input(REXUS_LO):
             lift_off()
+            break
 
 #Start the main program          
-main()
+try:
+    main()
+except KeyboardInterrupt:
+    GPIO.cleanup()
+
+GPIO.cleanup()
