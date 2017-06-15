@@ -11,25 +11,31 @@ from REXUS import REXUS
 import IMU_1
 from PiCam import PiCam
 
-#Setup all the pins on the Pi
-print('Setting up GPIO Pins')
+#Setup the pins on the Pi
+print('Setting up Pins')
+REXUS_LO = 40
+REXUS_SOE = 38
+REXUS_SODS = 36
+OUT_LED = 37
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(35, GPIO.IN)
-GPIO.setup(40, GPIO.OUT)
+GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+GPIO.setup(REXUS_SOE, GPIO.IN)
+GPIO.setup(REXUS_SODS, GPIO.IN)
+GPIO.setup(OUT_LED, GPIO.OUT)
 
 #Flash some LED's
 for i in range(0,5):
     print('Flashing LEDs')
-    GPIO.output(40,GPIO.LOW)
+    GPIO.output(OUT_LED,GPIO.LOW)
     time.sleep(0.1)
-    GPIO.output(40,GPIO.HIGH)
+    GPIO.output(OUT_LED,GPIO.HIGH)
     time.sleep(0.1)
 
-while 1:
-    #Wait for button to be pressed
-    button = GPIO.input(35)
-    if button == 1:
-        break
+try:
+    GPIO.wait_for_edge(REXUS_LO, GPIO.RISING)
+    print('Rising edge detected, moving on')
+except KeyboardInterrupt:
+    GPIO.cleanup()
 
 GPIO.output(40,GPIO.LOW)
 GPIO.cleanup()

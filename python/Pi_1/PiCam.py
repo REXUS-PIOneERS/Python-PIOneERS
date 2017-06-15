@@ -8,7 +8,7 @@ import os
 
 def ensure_dir(file_path):
     #Creates a directory if it doesn't exist from a Path variable
-    if not file_path.exists():
+    if not file_path.exists()   :
         file_path.mkdir(parents=True)
     
 
