@@ -23,22 +23,18 @@ GPIO.setup(REXUS_SOE, GPIO.IN)
 GPIO.setup(REXUS_SODS, GPIO.IN)
 GPIO.setup(OUT_LED, GPIO.OUT)
 
-#Flash some LED's
-for i in range(0,5):
-    print('Flashing LEDs')
-    GPIO.output(OUT_LED,GPIO.LOW)
-    time.sleep(0.1)
-    GPIO.output(OUT_LED,GPIO.HIGH)
-    time.sleep(0.1)
+def flash_led(channel):    
+    #Flash some LED's
+    for i in range(0,5):
+        print('Flashing LEDs')
+        GPIO.output(OUT_LED,GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(OUT_LED,GPIO.LOW)
+        time.sleep(0.1)
 
-try:
-    GPIO.wait_for_edge(REXUS_LO, GPIO.RISING)
-    print('Rising edge detected, moving on')
-except KeyboardInterrupt:
-    GPIO.cleanup()
+flash_led(None)
+GPIO.add_event_detect(REXUS_LO, GPIO.RISING, callback=flash_led, bouncetime=500)
 
-GPIO.output(40,GPIO.LOW)
-GPIO.cleanup()
 
 IMU_1.take_measurements(10)
 camera = PiCam()
