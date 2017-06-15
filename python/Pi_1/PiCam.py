@@ -15,6 +15,7 @@ def ensure_dir(file_path):
 class PiCam():
     
     def __init__(self):
+        self.active = False
         self.resolution = (640,480)
         self.images_dir = Path(os.path.dirname(__file__)) / 'PiCam_Img'
         self.videos_dir = Path(os.path.dirname(__file__)) / 'PiCam_Vid'
@@ -27,10 +28,12 @@ class PiCam():
     
     def video(self, length, file_name):
         '''Records a video for the given length of time (in seconds) and saves to a file'''
+        self.active = True
         if self.video_cut == None:
             self._one_video(length, file_name)
         else:
             self._cut_video(length, file_name)
+        self.active = False
     
     def _cut_video(self, length, file_name):
         '''Records a video of the given length cur into segments'''

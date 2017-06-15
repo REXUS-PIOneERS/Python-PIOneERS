@@ -18,58 +18,65 @@ REXUS_SOE = 38
 REXUS_SODS = 36
 OUT_LED = 37
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-GPIO.setup(REXUS_SOE, GPIO.IN)
-GPIO.setup(REXUS_SODS, GPIO.IN)
+GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(OUT_LED, GPIO.OUT)
 
-def flash_led(channel):    
-    #Flash some LED's
-    for i in range(0,5):
-        print('Flashing LEDs')
+#Setup classes for REXUS, IMU and PiCam
+REXUS_Comm = REXUS()
+PiCam_1 = PiCam()
+PiCam_1.video_cut = 5
+
+#Random Test Function for flashing an LED
+def flash_led():    
+    print('Flashing LEDs')
+    for i in range(0,5):    
         GPIO.output(OUT_LED,GPIO.HIGH)
         time.sleep(0.1)
         GPIO.output(OUT_LED,GPIO.LOW)
         time.sleep(0.1)
 
-flash_led(None)
-GPIO.add_event_detect(REXUS_LO, GPIO.RISING, callback=flash_led, bouncetime=500)
-
-
-IMU_1.take_measurements(10)
-camera = PiCam()
-camera.video_cut = 5
-camera.video(20,'test')
-
-#TODO create REXUS class for communicating with ground
-REXUS_Comm = REXUS()
-
-#TODO Check System Status
-
-#TODO Check for Hardware Test Mode- GPIO??
-
-while 1:
-    #TODO Communicate with ground before lift-off
-    Message = 'Some data to send'
-    Response = REXUS_Comm.communicate(Message)
-    #TODO Check for Software Test Mode- REXUS?
-    if Response == 'Test Mode':
-        break
-    #TODO Check for command to start camera  
-    if Response == 'T-10':
-        #TODO Activate Camera
-        break
-    #TODO Check for Lift-off GPIO
+def start_of_data_storage():
+    '''Backs up data between both Pi's'''
+    flash_led()
     
-    break
 
+def start_of_experiment():
+    '''Runs at start of experiment i.e. Nose Cone Ejection'''
+    flash_led()
+    #Activate the IMU
+    IMU_1.take_measurements(10)
+    #TODO Motor Deplyment
+    GPIO.wait_for_edge(REXUS_SODS, GPIO.RISING)
+    start_of_data_storage()
+        
 
-#TODO Check for SOE- GPIO
+def lift_off():
+    '''Program that runs after the rocket lifts off'''
+    flash_led()
+    if not PiCam_1.active:
+        PiCam_1.video(10,'LO_test')
+    while 1:
+        #TODO Send occasional messages to ground reporting status
+        if GPIO.input(REXUS_SOE):
+            start_of_experiment()
 
-#TODO Activate IMU and Motor
+def main():
+    '''Main entry point for the probram'''
+    flash_led()
+    #TODO Check for Hardware Test Mode- GPIO??    
+    #TODO Check System Status
+    while 1:
+        #TODO REXUS Communications
+        Message = 'Some data to send'
+        Response = REXUS_Comm.communicate(Message)
+        if Response == 'Test Mode':
+            break
+        if Response == 'T-10':
+            PiCam_1.video(10,'test')
+        if GPIO.input(REXUS_LO):
+            lift_off()
 
-#TODO Read Encoder to check for Boom deployment- send to ground
-
-#TODO Check for SODS- GPIO
-
-#TODO Backup Data (between pi's)
+#Start the main program          
+main()
