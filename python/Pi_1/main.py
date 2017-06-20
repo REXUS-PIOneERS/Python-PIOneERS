@@ -69,6 +69,24 @@ def lift_off():
     start_of_experiment()
 
 
+def software_test():
+    '''
+    Code for testing the software.
+
+    The code will attempt to run the IMU and camera raising an exception
+    if either one fails
+    '''
+    try:
+        IMU_1.take_measurements(10)
+        PiCam_1.video(10, 'soft_test')
+    except Exception as e:
+        # TODO handle some common exceptions
+        print(e)
+        return 1
+    REXUS_Comm.communicate('Software tests passed')
+    return -1
+
+
 def main():
     '''Main entry point for the probram'''
     flash_led()
@@ -79,6 +97,7 @@ def main():
         Message = 'Some data to send'
         Response = REXUS_Comm.communicate(Message)
         if Response == 'Test Mode':
+            # TODO create software test mode
             break
         if Response == 'T-10':
             PiCam_1.video(10, 'test')
@@ -90,7 +109,7 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    # Something to handle the exception
+    # TODO Handle some common exceptions, perhaps communicate to ground
     pass
 finally:
     GPIO.cleanup()
