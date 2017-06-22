@@ -28,7 +28,7 @@ REXUS_Comm = REXUS()
 PiCam_1 = PiCam()
 PiCam_1.video_cut = 5
 IMU_1 = IMU()
-
+IMU_1.setup_default()
 
 # Random Test Function for flashing an LED
 def flash_led():
@@ -53,7 +53,6 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    print('Accelrometer Active?:', IMU_1._acc_active)
     IMU_1.take_measurements_process(1, 'placeholder')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):

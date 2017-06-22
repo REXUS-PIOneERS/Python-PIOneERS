@@ -17,7 +17,7 @@ class SensorInactiveError(Exception):
     def __init__(self, sensor):
         self.sensor = sensor
         self.message = ('Attempted to read data from the {} failed due to'
-                        'inactive sensor').format(sensor)
+                        ' inactive sensor').format(sensor)
 
 class IMU():
     '''
@@ -89,6 +89,9 @@ class IMU():
         # Initialise the gyroscope
         self.writeReg(GYR_ADDRESS, CTRL_REG1_G, 0b00001111)
         self.writeReg(GYR_ADDRESS, CTRL_REG4_G, 0b00110000)
+        self._acc_active = True
+        self._mag_active = True
+        self._gyr_active = True
 
     def writeReg(self, address, register,value):
         '''Used to write values to various addresses for setting up the IMU'''
@@ -225,17 +228,20 @@ class IMU():
         Reads from all activated sensors at the specified frequency and saves
         to the location in save_file for seconds denoted by time.
         '''
-        print('Starting taking measurements')
-        with exit_flag.get_lock():
-            local_flag = exit_flag.value
-
-        while local_flag == 0:
-            # Take lots of measurements!
-            acc_values = self.readAcc()
-            mag_values = self.readMag()
-            gyr_values = self.readGyr()
-
-            print(acc_values, mag_values, gyr_values)
+        try:
+            print('Starting taking measurements')
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
-            time.sleep(1/freq)
+
+            while local_flag == 0:
+                # Take lots of measurements!
+                acc_values = self.readAcc()
+                mag_values = self.readMag()
+                gyr_values = self.readGyr()
+    
+                print(acc_values, mag_values, gyr_values)
+                with exit_flag.get_lock():
+                    local_flag = exit_flag.value
+                time.sleep(1/freq)
+        except SensorInactiveError as e:
+            print(e.message)
