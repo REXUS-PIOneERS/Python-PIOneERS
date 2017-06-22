@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 import time
 # Imports of local files and classes
 from REXUS import REXUS
-import IMU_1
+from IMU import IMU
 from PiCam import PiCam
 
 # Setup the pins on the Pi
@@ -27,9 +27,10 @@ GPIO.setup(OUT_LED, GPIO.OUT)
 REXUS_Comm = REXUS()
 PiCam_1 = PiCam()
 PiCam_1.video_cut = 5
+IMU_1 = IMU()
+IMU_1.setup_default()
 
 
-# Random Test Function for flashing an LED
 def flash_led():
     print('Flashing LEDs')
     for i in range(0, 5):
@@ -42,6 +43,10 @@ def flash_led():
 def start_of_data_storage():
     '''Backs up data between both Pi's'''
     print('Start of data storage')
+    # End the IMU measurements
+    IMU_1.end_measurements_processes()
+    # End the background video
+    PiCam_1.end_background_process()
     flash_led()
 
 
@@ -50,7 +55,7 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    IMU_1.take_measurements(10)
+    IMU_1.take_measurements_process(1, 'IMU_Test')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):
         time.sleep(0.1)
@@ -62,7 +67,7 @@ def lift_off():
     print('LIFT OFF!!!')
     flash_led()
     if not PiCam_1.active:
-        PiCam_1.video(10, 'test')
+        PiCam_1.background_record_process('cam', cut_length=5)
     while not GPIO.input(REXUS_SOE):
         # TODO Send occasional messages to ground reporting status
         time.sleep(0.1)
@@ -81,7 +86,7 @@ def main():
         if Response == 'Test Mode':
             break
         if Response == 'T-10':
-            PiCam_1.video(10, 'test')
+            PiCam_1.background_record_process('cam', cut_length=5)
         if GPIO.input(REXUS_LO):
             lift_off()
             break

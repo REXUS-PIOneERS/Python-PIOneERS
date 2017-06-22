@@ -4,7 +4,20 @@ Program for controlling the IMU connected to Pi_1
 
 import smbus
 from LSM9DS0 import *
+import multiprocessing
+import time
 
+class SensorInactiveError(Exception):
+    '''Exception raised when attempt to access inactive sensor
+
+    Attributes:
+        sensor -- the sensor to which access was attempted
+        message -- explanation of the error
+    '''
+    def __init__(self, sensor):
+        self.sensor = sensor
+        self.message = ('Attempted to read data from the {} failed due to'
+                        ' inactive sensor').format(sensor)
 
 class IMU():
     '''
@@ -33,11 +46,17 @@ class IMU():
     def __init__(self):
         '''Setup the bus for the IMU'''
         self.bus = smbus.SMBus(1)
+        self._processes = []
+        self._flags = []
+        self._acc_active = False
+        self._gyr_active = False
+        self._mag_active = False
 
     def __exit__(self):
         '''Reset all registers and close the bus'''
         self.reset_registers()
         self.bus.close()
+
 
     def reset_registers(self):
         '''
@@ -51,6 +70,9 @@ class IMU():
         self.writeReg(MAG_ADDRESS, CTRL_REG7_XM, 0)
         self.writeReg(GYR_ADDRESS, CTRL_REG1_G, 0)
         self.writeReg(GYR_ADDRESS, CTRL_REG4_G, 0)
+        self._acc_active = False
+        self._gyr_active = False
+        self._mag_active = False
 
     def setup_default(self):
         '''
@@ -67,6 +89,9 @@ class IMU():
         # Initialise the gyroscope
         self.writeReg(GYR_ADDRESS, CTRL_REG1_G, 0b00001111)
         self.writeReg(GYR_ADDRESS, CTRL_REG4_G, 0b00110000)
+        self._acc_active = True
+        self._mag_active = True
+        self._gyr_active = True
 
     def writeReg(self, address, register,value):
         '''Used to write values to various addresses for setting up the IMU'''
@@ -76,6 +101,8 @@ class IMU():
     def readAccAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
         # Check which axis we are using to make measurements
+        if self._acc_active == False:
+            raise SensorInactiveError('Accelerometer')
         if axis == 0:
             register_l = OUT_X_L_A
             register_h = OUT_X_H_A
@@ -97,6 +124,8 @@ class IMU():
 
     def readMagAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
+        if self._mag_active == False:
+            raise SensorInactiveError('Accelerometer')
         # Check which axis we are using to make measurements
         if axis == 0:
             register_l = OUT_X_L_M
@@ -120,6 +149,8 @@ class IMU():
     def readGyrAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
         # Check which axis we are using to make measurements
+        if self._acc_active == False:
+            raise SensorInactiveError('Accelerometer')
         if axis == 0:
             register_l = OUT_X_L_G
             register_h = OUT_X_H_G
@@ -165,3 +196,57 @@ class IMU():
         return {'x': self.readMagAxis(0),
                 'y': self.readMagAxis(1),
                 'z': self.readMagAxis(2)}
+
+    def take_measurements_process(self, freq, file_name):
+        '''
+        Generates a python process for taking measurements with the IMU.
+        '''
+        exit_flag = multiprocessing.Value('i', 0)
+        p = multiprocessing.Process(target=self._take_measurements,
+                                    args=(freq, file_name, exit_flag))
+        self._processes.append(p)
+        self._flags.append(exit_flag)
+        p.start()
+        return True
+
+    def end_measurements_processes(self):
+        '''
+        End all active processes taking measurements
+        '''
+        for flag in self._flags:
+            with flag.get_lock():
+                flag.value = 1
+
+        for i, process in enumerate(self._processes):
+            process.join()
+            print('IMU Process {} joined'.format(i))
+
+        return
+
+    def _take_measurements(self, freq, file_name, exit_flag):
+        '''
+        Reads from all activated sensors at the specified frequency and saves
+        to the location in save_file for seconds denoted by time.
+        '''
+        try:
+            with exit_flag.get_lock():
+                local_flag = exit_flag.value
+
+            with open('{}.txt'.format(file_name),'w') as file:
+                while local_flag == 0:
+                    # Take lots of measurements!
+                    acc = self.readAcc()
+                    mag = self.readMag()
+                    gyr = self.readGyr()
+
+                    file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag: '
+                                   '{} {} {}\n').format(
+                                           acc['x'], acc['y'], acc['z'],
+                                           gyr['x'], gyr['y'], gyr['z'],
+                                           mag['x'], mag['y'], mag['z'])
+                    file.write(file_output)
+                    with exit_flag.get_lock():
+                        local_flag = exit_flag.value
+                    time.sleep(1/freq)
+        except SensorInactiveError as e:
+            print(e.message)

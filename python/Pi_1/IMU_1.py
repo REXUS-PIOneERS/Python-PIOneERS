@@ -4,7 +4,7 @@ Program for controlling the IMU connected to Pi_1
 
 from IMU import IMU
 import time
-
+import multiprocessing
 
 def take_measurements(n):
     '''Takes n measurements of gyro, acc and mag'''
