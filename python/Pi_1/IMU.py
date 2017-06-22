@@ -219,7 +219,7 @@ class IMU():
 
         for i, process in enumerate(self._processes):
             process.join()
-            print('Process {} joined'.format(i))
+            print('IMU Process {} joined'.format(i))
 
         return
 
@@ -229,7 +229,6 @@ class IMU():
         to the location in save_file for seconds denoted by time.
         '''
         try:
-            print('Starting taking measurements')
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
 
