@@ -233,21 +233,21 @@ class IMU():
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
 
-            with open('{}.txt'.format(file_name)) as file:
-            while local_flag == 0:
-                # Take lots of measurements!
-                acc = self.readAcc()
-                mag = self.readMag()
-                gyr = self.readGyr()
+            with open('{}.txt'.format(file_name),'w') as file:
+                while local_flag == 0:
+                    # Take lots of measurements!
+                    acc = self.readAcc()
+                    mag = self.readMag()
+                    gyr = self.readGyr()
 
-                file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag:'
-                               '{} {} {}\n').format(
-                                       acc['x'], acc['y'], acc['z'],
-                                       gyr['x'], gyr['y'], gyr['z'],
-                                       mag['x'], mag['y'], mag['z'])
-                file.write(file_output)
-                with exit_flag.get_lock():
-                    local_flag = exit_flag.value
-                time.sleep(1/freq)
+                    file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag: '
+                                   '{} {} {}\n').format(
+                                           acc['x'], acc['y'], acc['z'],
+                                           gyr['x'], gyr['y'], gyr['z'],
+                                           mag['x'], mag['y'], mag['z'])
+                    file.write(file_output)
+                    with exit_flag.get_lock():
+                        local_flag = exit_flag.value
+                    time.sleep(1/freq)
         except SensorInactiveError as e:
             print(e.message)
