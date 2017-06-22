@@ -7,6 +7,18 @@ from LSM9DS0 import *
 import multiprocessing
 import time
 
+class SensorInactiveError(Exception):
+    '''Exception raised when attempt to access inactive sensor
+
+    Attributes:
+        sensor -- the sensor to which access was attempted
+        message -- explanation of the error
+    '''
+    def __init__(self, sensor):
+        self.sensor = sensor
+        self.message = ('Attempted to read data from the {} failed due to'
+                        'inactive sensor').format(sensor)
+
 class IMU():
     '''
     Class for controlling the BerryIMU gyroscope, accelerometer and
@@ -36,6 +48,9 @@ class IMU():
         self.bus = smbus.SMBus(1)
         self._processes = []
         self._flags = []
+        self._acc_active = False
+        self._gyr_active = False
+        self._mag_active = False
 
     def __exit__(self):
         '''Reset all registers and close the bus'''
@@ -55,6 +70,9 @@ class IMU():
         self.writeReg(MAG_ADDRESS, CTRL_REG7_XM, 0)
         self.writeReg(GYR_ADDRESS, CTRL_REG1_G, 0)
         self.writeReg(GYR_ADDRESS, CTRL_REG4_G, 0)
+        self._acc_active = False
+        self._gyr_active = False
+        self._mag_active = False
 
     def setup_default(self):
         '''
@@ -80,6 +98,8 @@ class IMU():
     def readAccAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
         # Check which axis we are using to make measurements
+        if self._acc_active == False:
+            raise SensorInactiveError('Accelerometer')
         if axis == 0:
             register_l = OUT_X_L_A
             register_h = OUT_X_H_A
@@ -101,6 +121,8 @@ class IMU():
 
     def readMagAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
+        if self._mag_active == False:
+            raise SensorInactiveError('Accelerometer')
         # Check which axis we are using to make measurements
         if axis == 0:
             register_l = OUT_X_L_M
@@ -124,6 +146,8 @@ class IMU():
     def readGyrAxis(self, axis):
         '''Axis should be 0,1 or 2 (0=>x,1=>y,2=>z)'''
         # Check which axis we are using to make measurements
+        if self._acc_active == False:
+            raise SensorInactiveError('Accelerometer')
         if axis == 0:
             register_l = OUT_X_L_G
             register_h = OUT_X_H_G
@@ -170,13 +194,13 @@ class IMU():
                 'y': self.readMagAxis(1),
                 'z': self.readMagAxis(2)}
 
-    def take_measurements_process(self, freq, file):
+    def take_measurements_process(self, freq, file_name):
         '''
         Generates a python process for taking measurements with the IMU.
         '''
         exit_flag = multiprocessing.Value('i', 0)
         p = multiprocessing.Process(target=self._take_measurements,
-                                    args=(freq, file, exit_flag))
+                                    args=(freq, file_name, exit_flag))
         self._processes.append(p)
         self._flags.append(exit_flag)
         p.start()
@@ -194,20 +218,24 @@ class IMU():
             process.join()
             print('Process {} joined'.format(i))
 
+        return
 
-
-    def _take_measurements(self, freq, file, exit_flag):
+    def _take_measurements(self, freq, file_name, exit_flag):
         '''
         Reads from all activated sensors at the specified frequency and saves
         to the location in save_file for seconds denoted by time.
         '''
-        print('Starting measurement taking')
-        print('Exit flag is', exit_flag)
+        print('Starting taking measurements')
         with exit_flag.get_lock():
             local_flag = exit_flag.value
-        print('Local flag is', local_flag)
+
         while local_flag == 0:
-            print('Taking Measurements')
+            # Take lots of measurements!
+            acc_values = self.readAcc()
+            mag_values = self.readMag()
+            gyr_values = self.readGyr()
+
+            print(acc_values, mag_values, gyr_values)
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
-            time.sleep(0.5)
+            time.sleep(1/freq)

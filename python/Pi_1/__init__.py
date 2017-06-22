@@ -53,6 +53,7 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
+    print('Accelrometer Active?:', IMU_1._acc_active)
     IMU_1.take_measurements_process(1, 'placeholder')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):
