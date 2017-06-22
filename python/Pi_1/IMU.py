@@ -5,7 +5,7 @@ Program for controlling the IMU connected to Pi_1
 import smbus
 from LSM9DS0 import *
 import multiprocessing
-
+import time
 
 class IMU():
     '''
@@ -175,7 +175,7 @@ class IMU():
         Generates a python process for taking measurements with the IMU.
         '''
         exit_flag = multiprocessing.Value('i', 0)
-        p = multiprocessing.Process(target=self.take_measurements,
+        p = multiprocessing.Process(target=self._take_measurements,
                                     args=(freq, file, exit_flag))
         self._processes.append(p)
         self._flags.append(exit_flag)
@@ -188,7 +188,7 @@ class IMU():
         '''
         for flag in self._flags:
             with flag.get_lock():
-                flag = 1
+                flag.value = 1
 
         for i, process in enumerate(self._processes):
             process.join()
@@ -201,6 +201,13 @@ class IMU():
         Reads from all activated sensors at the specified frequency and saves
         to the location in save_file for seconds denoted by time.
         '''
-        while not exit_flag:
+        print('Starting measurement taking')
+        print('Exit flag is', exit_flag)
+        with exit_flag.get_lock():
+            local_flag = exit_flag.value
+        print('Local flag is', local_flag)
+        while local_flag == 0:
             print('Taking Measurements')
+            with exit_flag.get_lock():
+                local_flag = exit_flag.value
             time.sleep(0.5)
