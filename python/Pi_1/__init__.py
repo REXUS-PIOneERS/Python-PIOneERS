@@ -53,7 +53,7 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    IMU_1.take_measurements_process(1, 'placeholder')
+    IMU_1.take_measurements_process(1, 'IMU_Test')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):
         time.sleep(0.1)

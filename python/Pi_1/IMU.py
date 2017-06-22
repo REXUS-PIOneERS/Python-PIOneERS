@@ -233,13 +233,19 @@ class IMU():
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
 
+            with open('{}.txt'.format(file_name)) as file:
             while local_flag == 0:
                 # Take lots of measurements!
-                acc_values = self.readAcc()
-                mag_values = self.readMag()
-                gyr_values = self.readGyr()
-    
-                print(acc_values, mag_values, gyr_values)
+                acc = self.readAcc()
+                mag = self.readMag()
+                gyr = self.readGyr()
+
+                file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag:'
+                               '{} {} {}\n').format(
+                                       acc['x'], acc['y'], acc['z'],
+                                       gyr['x'], gyr['y'], gyr['z'],
+                                       mag['x'], mag['y'], mag['z'])
+                file.write(file_output)
                 with exit_flag.get_lock():
                     local_flag = exit_flag.value
                 time.sleep(1/freq)
