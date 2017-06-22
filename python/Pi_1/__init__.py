@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 import time
 # Imports of local files and classes
 from REXUS import REXUS
-import IMU_1
+from IMU import IMU
 from PiCam import PiCam
 
 # Setup the pins on the Pi
@@ -27,6 +27,7 @@ GPIO.setup(OUT_LED, GPIO.OUT)
 REXUS_Comm = REXUS()
 PiCam_1 = PiCam()
 PiCam_1.video_cut = 5
+IMU_1 = IMU()
 
 
 # Random Test Function for flashing an LED
@@ -42,6 +43,8 @@ def flash_led():
 def start_of_data_storage():
     '''Backs up data between both Pi's'''
     print('Start of data storage')
+    # End the IMU measurements
+    IMU_1.end_measurements_processes()
     flash_led()
 
 
@@ -50,7 +53,7 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    IMU_1.take_measurements(10)
+    IMU_1.take_measurements_process(1, 'placeholder')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):
         time.sleep(0.1)

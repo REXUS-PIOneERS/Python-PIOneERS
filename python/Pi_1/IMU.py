@@ -35,6 +35,7 @@ class IMU():
         '''Setup the bus for the IMU'''
         self.bus = smbus.SMBus(1)
         self._processes = []
+        self._flags = []
 
     def __exit__(self):
         '''Reset all registers and close the bus'''
@@ -195,7 +196,7 @@ class IMU():
 
 
 
-    def take_measurements(self, freq, file, exit_flag):
+    def _take_measurements(self, freq, file, exit_flag):
         '''
         Reads from all activated sensors at the specified frequency and saves
         to the location in save_file for seconds denoted by time.
