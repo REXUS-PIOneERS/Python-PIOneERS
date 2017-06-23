@@ -37,6 +37,7 @@ class SPI_Master():
         Command, Channel, Bits
         '''
         command = (0b1 << 7 | channel << 4 | num_bits)
+        print("sending command:", bin(command))
         # Pull CS Low to prepare for recieving command
         GPIO.output(self.CS, GPIO.LOW)
         self._sendBitsFromMaster(command, 8)
@@ -67,6 +68,7 @@ class SPI_Master():
 
     def _sendBitsFromMaster(self, data, num_bits):
         '''Send bits to the slave device'''
+        print("Sending bits...",bin(data))
         for bit in range(num_bits, 0, -1):
             bit -= 1
             dec_value = 2 ** bit
@@ -90,7 +92,7 @@ class SPI_Master():
             # Pulse the clock to start recieving data
             GPIO.output(self.CLK, GPIO.LOW)
             time.sleep(1/self.freq)  # Give the slave time to respond
-            if GPIO.input(self.MISO, GPIO.HIGH):
+            if GPIO.input(self.MISO):
                 data |= 0b1
             data <<= 1
             GPIO.output(self.CLK, GPIO.HIGH)
@@ -127,6 +129,7 @@ class SPI_Slave():
     def recieve_command(self, channel):
         '''Reads data from the master to recieve the command (8-bit)'''
         command = self._readBitsFromMaster(8)
+        print("Command recieved:", bin(command))
         '''
         Structure of command
         Bit 8: 1 = recieve, 0 = send  (MSB)
@@ -136,6 +139,7 @@ class SPI_Slave():
         recieve = (command & 0b10000000) >> 7
         channel = (command & 0b01110000) >> 4
         num_bits = command & 0b00001111
+        print(recieve, command, num_bits)
         if recieve:
             self._recieve_data(channel, num_bits)
         else:
@@ -157,7 +161,7 @@ class SPI_Slave():
     def _recieve_data(self, channel, num_bits):
         '''Recieve the data and store in the channel'''
         if 0 < channel or channel > 7:
-            print('Invalid SPI channel number, must be in range 0-7')
+            print('Recieve: Invalid SPI channel number, must be in range 0-7', channel)
             return
         # Read the data
         self.channel[channel] = self._readBitsFromMaster(num_bits)
@@ -165,7 +169,7 @@ class SPI_Slave():
     def _send_data(self, channel, num_bits):
         '''Send the data from the channel'''
         if 0 < channel or channel > 7:
-            print('Invalid SPI channel number, must be in range 0-7')
+            print('Send: Invalid SPI channel number, must be in range 0-7', channel)
         # Send the data
         self._sendBitsFromSlave(self.channels[channel], num_bits)
 
@@ -174,7 +178,7 @@ class SPI_Slave():
         # Send data starting with the MSB
         for bit in range(num_bits, 0, -1):
             bit -= 1
-            dec_value = bit ** 2
+            dec_value = 2 ** bit
             # Wait for the clock to pulse
             GPIO.wait_for_edge(self.CLK, GPIO.FALLING)
             if data/dec_value >= 1:

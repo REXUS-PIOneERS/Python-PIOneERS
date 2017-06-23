@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 
 GPIO.cleanup()
 
-spi = SPI.SPI_Master(38, 37, 36, 35, freq=10)
+spi = SPI.SPI_Master(38, 37, 36, 35, freq=2)
 
 print("Sending 10 to channel 1")
 spi.send_data(1, 10, 8)
