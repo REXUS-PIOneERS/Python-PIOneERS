@@ -14,7 +14,7 @@ class SPI_Master():
         self.CS = CS            # Chip Select
         GPIO.setup(self.CLK, GPIO.OUT)
         GPIO.setup(self.MOSI, GPIO.OUT)
-        GPIO.setup(self.MISO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.MISO, GPIO.IN)
         GPIO.setup(self.CS, GPIO.OUT)
         self.freq = freq
         # Activate the SPI line
@@ -69,11 +69,13 @@ class SPI_Master():
         '''Send bits to the slave device'''
         for bit in range(num_bits, 0, -1):
             bit -= 1
-            dec_value = bit ** 2
+            dec_value = 2 ** bit
             if (data/dec_value >= 1):
+                print("sent bit: 1")
                 GPIO.output(self.MOSI, GPIO.HIGH)
                 data -= dec_value
             else:
+                print("sent bit: 2")
                 GPIO.output(self.MOSI, GPIO.LOW)
             # Pulse the clock pin to push data through
             GPIO.output(self.CLK, GPIO.LOW)
@@ -93,6 +95,7 @@ class SPI_Master():
             data <<= 1
             GPIO.output(self.CLK, GPIO.HIGH)
 
+        data >>= 1
         return data
 
 
@@ -104,10 +107,10 @@ class SPI_Slave():
         self.MISO = MISO
         self.MOSI = MOSI
         self.CS = CS
-        GPIO.setup(self.CLK, GPIO.INPUT, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(self.MOSI, GPIO.INPUT, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(self.MISO, GPIO.OUTPUT)
-        GPIO.setup(self.CS, GPIO.INPUT, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.CLK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.MOSI, GPIO.IN)
+        GPIO.setup(self.MISO, GPIO.OUT)
+        GPIO.setup(self.CS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # Setup data registers
         self.channels = [0 for i in range(7)]
         # Activate spi connection
@@ -119,7 +122,7 @@ class SPI_Slave():
         GPIO.add_event_detect(self.CS,
                               GPIO.FALLING,
                               callback=self.recieve_command,
-                              boundetime=10)
+                              bouncetime=10)
 
     def recieve_command(self, channel):
         '''Reads data from the master to recieve the command (8-bit)'''
@@ -148,6 +151,7 @@ class SPI_Slave():
                 data |= 0b1
             data <<= 1
 
+        data >>= 1
         return data
 
     def _recieve_data(self, channel, num_bits):

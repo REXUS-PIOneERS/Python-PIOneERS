@@ -1,5 +1,7 @@
-from . import RPi_SPI as SPI
+import RPi_SPI as SPI
 import RPi.GPIO as GPIO
+
+GPIO.cleanup()
 
 spi = SPI.SPI_Master(38, 37, 36, 35, freq=10)
 
