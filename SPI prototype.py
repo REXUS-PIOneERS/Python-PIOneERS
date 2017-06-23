@@ -57,9 +57,7 @@ def readFromSlave(channel, clkPin, misoPin, mosiPin, csPin):
     read_command |= channel
 
     sendBitsFromMaster(read_command, 5, clkPin, mosiPin)
-
     # note that the 12 here is the number of bits that are expected and this should be changed accoring to the data being recieved
-
 
     slaveValue = recvBitsFromSlave(12, clkPin, misoPin)
 
@@ -101,7 +99,6 @@ def recvBitsFromSlave(numBits, clkPin, misoPin):
         #advance input to next bit
         retVal <<= 1
 
-
     return retVal
 
 
@@ -130,7 +127,7 @@ def recvBitsFromMaster(numBits, clkPin, mosiPin):
     retVal = 0
 
     for bit in range(numBits):
-        while (not(GPIO.input(clkPin))):
+        while not GPIO.input(clkPin):
             pass
             #do nothing
             #stalls the processor

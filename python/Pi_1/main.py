@@ -8,28 +8,44 @@ import RPi.GPIO as GPIO
 import time
 # Imports of local files and classes
 from REXUS import REXUS
-import IMU_1
+from IMU import IMU
 from PiCam import PiCam
 
 # Setup the pins on the Pi
 print('Setting up Pins')
+
+GPIO.setmode(GPIO.BOARD)
+# Main GPIO's for REXUS Signals
 REXUS_LO = 40
 REXUS_SOE = 38
 REXUS_SODS = 36
-OUT_LED = 37
-GPIO.setmode(GPIO.BOARD)
 GPIO.setup(REXUS_LO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+# Pins for SPI Communication
+CLK = 18  # clock
+MISO = 23  # Master in Slave out, used to transmit FROM the Slave device
+MOSI = 24  # Master out Slave in, used to transmit FROM the Master device
+CS = 25  # Chip select
+# TODO transition SPI Prototype to actual function
+
+#Output pins
+OUT_LED = 37
+MOTOR = None #TODO Set up PWM for motor
 GPIO.setup(OUT_LED, GPIO.OUT)
+
+# TODO Pins for UART Communication with the IMP
+
 
 # Setup classes for REXUS, IMU and PiCam
 REXUS_Comm = REXUS()
 PiCam_1 = PiCam()
 PiCam_1.video_cut = 5
+IMU_1 = IMU()
+IMU_1.setup_default()
 
 
-# Random Test Function for flashing an LED
 def flash_led():
     print('Flashing LEDs')
     for i in range(0, 5):
@@ -42,6 +58,10 @@ def flash_led():
 def start_of_data_storage():
     '''Backs up data between both Pi's'''
     print('Start of data storage')
+    # End the IMU measurements
+    IMU_1.end_measurements_processes()
+    # End the background video
+    PiCam_1.end_background_process()
     flash_led()
 
 
@@ -50,7 +70,7 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    IMU_1.take_measurements(10)
+    IMU_1.take_measurements_process(1, 'IMU_Test')
     # TODO Motor Deplyment
     while not GPIO.input(REXUS_SODS):
         time.sleep(0.1)
@@ -62,29 +82,11 @@ def lift_off():
     print('LIFT OFF!!!')
     flash_led()
     if not PiCam_1.active:
-        PiCam_1.video(10, 'test')
+        PiCam_1.background_record_process('cam', cut_length=5)
     while not GPIO.input(REXUS_SOE):
         # TODO Send occasional messages to ground reporting status
         time.sleep(0.1)
     start_of_experiment()
-
-
-def software_test():
-    '''
-    Code for testing the software.
-
-    The code will attempt to run the IMU and camera raising an exception
-    if either one fails
-    '''
-    try:
-        IMU_1.take_measurements(10)
-        PiCam_1.video(10, 'soft_test')
-    except Exception as e:
-        # TODO handle some common exceptions
-        print(e)
-        return 1
-    REXUS_Comm.communicate('Software tests passed')
-    return -1
 
 
 def main():
@@ -97,10 +99,9 @@ def main():
         Message = 'Some data to send'
         Response = REXUS_Comm.communicate(Message)
         if Response == 'Test Mode':
-            # TODO create software test mode
             break
         if Response == 'T-10':
-            PiCam_1.video(10, 'test')
+            PiCam_1.background_record_process('cam', cut_length=5)
         if GPIO.input(REXUS_LO):
             lift_off()
             break
@@ -109,7 +110,7 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    # TODO Handle some common exceptions, perhaps communicate to ground
+    # Something to handle the exception
     pass
 finally:
     GPIO.cleanup()
