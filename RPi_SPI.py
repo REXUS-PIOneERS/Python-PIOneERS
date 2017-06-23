@@ -57,13 +57,14 @@ class SPI_Master():
         Bit 1-4: Number of bits to read/write (LSB)
         Command, Channel, Bits
         '''
-        command = (0b1 << 7 | channel << 4 | num_bits)
+        command = (0b0 << 7 | channel << 4 | num_bits)
         # Pull CS Low to prepare for recieving command
         GPIO.output(self.CS, GPIO.LOW)
         self._sendBitsFromMaster(command, 8)
         # Sleep to give slave time to respond
         time.sleep(0.1)
         # Recieve the data
+        GPIO.output(self.CS, GPIO.HIGH)
         return self._recvBitsFromSlave(num_bits)
 
     def _sendBitsFromMaster(self, data, num_bits):
@@ -77,12 +78,13 @@ class SPI_Master():
                 GPIO.output(self.MOSI, GPIO.HIGH)
                 data -= dec_value
             else:
-                print("sent bit: 2")
+                print("sent bit: 0")
                 GPIO.output(self.MOSI, GPIO.LOW)
             # Pulse the clock pin to push data through
             GPIO.output(self.CLK, GPIO.LOW)
             time.sleep(1/self.freq)
             GPIO.output(self.CLK, GPIO.HIGH)
+            time.sleep(1/self.freq)
 
     def _recvBitsFromSlave(self, num_bits):
         '''Get data from the salve'''
@@ -152,7 +154,10 @@ class SPI_Slave():
             # Wait for the clock to pulse
             GPIO.wait_for_edge(self.CLK, GPIO.FALLING)
             if GPIO.input(self.MOSI):
+                print("Recieved bit:", 1)
                 data |= 0b1
+            else:
+                print("Recieved bit:", 0)
             data <<= 1
 
         data >>= 1
