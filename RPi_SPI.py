@@ -160,7 +160,7 @@ class SPI_Slave():
 
     def _recieve_data(self, channel, num_bits):
         '''Recieve the data and store in the channel'''
-        if 0 < channel or channel > 7:
+        if 0 > channel or channel > 7:
             print('Recieve: Invalid SPI channel number, must be in range 0-7', channel)
             return
         # Read the data
@@ -168,7 +168,7 @@ class SPI_Slave():
 
     def _send_data(self, channel, num_bits):
         '''Send the data from the channel'''
-        if 0 < channel or channel > 7:
+        if 0 > channel or channel > 7:
             print('Send: Invalid SPI channel number, must be in range 0-7', channel)
         # Send the data
         self._sendBitsFromSlave(self.channels[channel], num_bits)
