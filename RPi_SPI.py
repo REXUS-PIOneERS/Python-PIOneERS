@@ -42,6 +42,7 @@ class SPI_Master():
         GPIO.output(self.CS, GPIO.HIGH)
         GPIO.output(self.CS, GPIO.LOW)
         # Wait for acknoweldge from Slave
+        time.sleep(0.01)
         self._sendBitsFromMaster(command, 8)
         # Sleep for a bit to give the slave time to prepare
         # time.sleep(0.1)
@@ -61,8 +62,9 @@ class SPI_Master():
         '''
         command = (0b0 << 7 | channel << 4 | num_bits)
         # Pull CS Low to prepare for recieving command
+        GPIO.output(self.CS, GPIO.HIGH)
         GPIO.output(self.CS, GPIO.LOW)
-        # GPIO.wait_for_edge(self.MISO, GPIO.FALLING)
+        time.sleep(0.01)
         self._sendBitsFromMaster(command, 8)
         # Sleep to give slave time to respond
         # time.sleep(0.1)
@@ -84,7 +86,6 @@ class SPI_Master():
                 print("sent bit: 0")
                 GPIO.output(self.MOSI, GPIO.LOW)
             # Pulse the clock pin to push data through
-            # time.sleep(1/self.freq)
             time.sleep(0.5/self.freq)
             GPIO.output(self.CLK, GPIO.LOW)
             GPIO.output(self.CLK, GPIO.HIGH)
@@ -154,6 +155,7 @@ class SPI_Slave():
 
     def _readBitsFromMaster(self, num_bits):
         '''Reads bits from the master'''
+        print("Waiting for bits")
         data = 0
         for bit in range(num_bits):
             # Wait for the clock to pulse
