@@ -82,7 +82,6 @@ class SPI_Master():
                 GPIO.output(self.MOSI, GPIO.LOW)
             # Pulse the clock pin to push data through
             GPIO.output(self.CLK, GPIO.LOW)
-            time.sleep(1/self.freq)
             GPIO.output(self.CLK, GPIO.HIGH)
             time.sleep(1/self.freq)
 
@@ -93,12 +92,11 @@ class SPI_Master():
         for bit in range(num_bits):
             # Pulse the clock to start recieving data
             GPIO.output(self.CLK, GPIO.LOW)
+            GPIO.output(self.CLK, GPIO.HIGH)
             time.sleep(1/self.freq)  # Give the slave time to respond
             if GPIO.input(self.MISO):
                 data |= 0b1
             data <<= 1
-            GPIO.output(self.CLK, GPIO.HIGH)
-
         data >>= 1
         return data
 
