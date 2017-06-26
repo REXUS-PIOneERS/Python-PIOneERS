@@ -32,6 +32,7 @@ class PiCam():
 
     def background_record_process(self, file_name, cut_length=None):
         '''Start a background process constantly recording video'''
+        self.active = True
         flag = multiprocessing.Value('i', 0)
         if cut_length is None:
             p = multiprocessing.Process(target=self._video_process,
@@ -46,6 +47,7 @@ class PiCam():
 
     def end_background_process(self):
         '''End all background processes'''
+        self.active = False
         # Tell the processes to stop recording
         for flag in self._flags:
             with flag.get_lock():

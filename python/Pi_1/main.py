@@ -10,6 +10,7 @@ import time
 from REXUS import REXUS
 from IMU import IMU
 from PiCam import PiCam
+from RPi_SPI import SPI_Master
 
 # Setup the pins on the Pi
 print('Setting up Pins')
@@ -28,11 +29,11 @@ CLK = 18  # clock
 MISO = 23  # Master in Slave out, used to transmit FROM the Slave device
 MOSI = 24  # Master out Slave in, used to transmit FROM the Master device
 CS = 25  # Chip select
-# TODO transition SPI Prototype to actual function
+SPI = SPI_Master(CLK, MISO, MOSI, CS)
 
-#Output pins
+# Output pins
 OUT_LED = 37
-MOTOR = None #TODO Set up PWM for motor
+MOTOR = None # TODO Set up PWM for motor
 GPIO.setup(OUT_LED, GPIO.OUT)
 
 # TODO Pins for UART Communication with the IMP
