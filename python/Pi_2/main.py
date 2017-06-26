@@ -7,9 +7,9 @@ import RPi.GPIO as GPIO
 # Imports for the program
 import time
 # Imports of local files and classes
-from REXUS import REXUS
-from IMU import IMU
+from RPi_SPI import SPI_Slave
 from PiCam import PiCam
+
 
 # Setup the pins on the Pi
 print('Setting up Pins')
@@ -23,15 +23,18 @@ GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(OUT_LED, GPIO.OUT)
 
-# Setup classes for REXUS, IMU and PiCam
-REXUS_Comm = REXUS()
-PiCam_1 = PiCam()
-PiCam_1.video_cut = 5
-IMU_1 = IMU()
-IMU_1.setup_default()
+# Setup classes for ImP, SPI and PiCam
+CLK = 18
+MISO = 23
+MOSI = 24
+CS = 25
+SPI = SPI_Slave(CLK, MISO, MOSI, CS)
+PiCam_2 = PiCam()
+ImP = None  # TODO Setup UART communication for ImP
 
 
 def flash_led():
+    '''Test function that flashes an LED'''
     print('Flashing LEDs')
     for i in range(0, 5):
         GPIO.output(OUT_LED, GPIO.HIGH)
@@ -43,10 +46,6 @@ def flash_led():
 def start_of_data_storage():
     '''Backs up data between both Pi's'''
     print('Start of data storage')
-    # End the IMU measurements
-    IMU_1.end_measurements_processes()
-    # End the background video
-    PiCam_1.end_background_process()
     flash_led()
 
 
@@ -54,9 +53,7 @@ def start_of_experiment():
     '''Runs at start of experiment i.e. Nose Cone Ejection'''
     print('start of experiment')
     flash_led()
-    # Activate the IMU
-    IMU_1.take_measurements_process(1, 'IMU_Test')
-    # TODO Motor Deplyment
+    # TODO UART Communication with ImP
     while not GPIO.input(REXUS_SODS):
         time.sleep(0.1)
     start_of_data_storage()
@@ -66,8 +63,8 @@ def lift_off():
     '''Program that runs after the rocket lifts off'''
     print('LIFT OFF!!!')
     flash_led()
-    if not PiCam_1.active:
-        PiCam_1.background_record_process('cam', cut_length=5)
+    if not PiCam_2.active:
+        PiCam_2.video(10, 'LO_test')
     while not GPIO.input(REXUS_SOE):
         # TODO Send occasional messages to ground reporting status
         time.sleep(0.1)
@@ -80,22 +77,21 @@ def main():
     # TODO Check for Hardware Test Mode- GPIO??
     # TODO Check System Status
     while 1:
-        # TODO REXUS Communications
-        Message = 'Some data to send'
-        Response = REXUS_Comm.communicate(Message)
+        # TODO SPI communications with Pi_1
+        Response = None
         if Response == 'Test Mode':
             break
         if Response == 'T-10':
-            PiCam_1.background_record_process('cam', cut_length=5)
+            PiCam_2.background_record_process("Cam2", 5)
         if GPIO.input(REXUS_LO):
             lift_off()
             break
 
 # Start the main program
-try:
-    main()
-except KeyboardInterrupt:
-    # Something to handle the exception
-    pass
-finally:
-    GPIO.cleanup()
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        GPIO.cleanup()
+    finally:
+        GPIO.cleanup()
