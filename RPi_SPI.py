@@ -39,10 +39,12 @@ class SPI_Master():
         command = (0b1 << 7 | channel << 4 | num_bits)
         print("sending command:", bin(command))
         # Pull CS Low to prepare for recieving command
+        GPIO.output(self.CS, GPIO.HIGH)
         GPIO.output(self.CS, GPIO.LOW)
+        # Wait for acknoweldge from Slave
         self._sendBitsFromMaster(command, 8)
         # Sleep for a bit to give the slave time to prepare
-        time.sleep(0.1)
+        # time.sleep(0.1)
         # Send the data
         self._sendBitsFromMaster(data, num_bits)
         # Pull CS High to signal end of communication
@@ -60,9 +62,10 @@ class SPI_Master():
         command = (0b0 << 7 | channel << 4 | num_bits)
         # Pull CS Low to prepare for recieving command
         GPIO.output(self.CS, GPIO.LOW)
+        # GPIO.wait_for_edge(self.MISO, GPIO.FALLING)
         self._sendBitsFromMaster(command, 8)
         # Sleep to give slave time to respond
-        time.sleep(0.1)
+        # time.sleep(0.1)
         # Recieve the data
         GPIO.output(self.CS, GPIO.HIGH)
         return self._recvBitsFromSlave(num_bits)
@@ -81,9 +84,11 @@ class SPI_Master():
                 print("sent bit: 0")
                 GPIO.output(self.MOSI, GPIO.LOW)
             # Pulse the clock pin to push data through
+            # time.sleep(1/self.freq)
+            time.sleep(0.5/self.freq)
             GPIO.output(self.CLK, GPIO.LOW)
             GPIO.output(self.CLK, GPIO.HIGH)
-            time.sleep(1/self.freq)
+            time.sleep(0.5/self.freq)
 
     def _recvBitsFromSlave(self, num_bits):
         '''Get data from the salve'''
@@ -91,9 +96,10 @@ class SPI_Master():
 
         for bit in range(num_bits):
             # Pulse the clock to start recieving data
+            time.sleep(0.5/self.freq)
             GPIO.output(self.CLK, GPIO.LOW)
             GPIO.output(self.CLK, GPIO.HIGH)
-            time.sleep(1/self.freq)  # Give the slave time to respond
+            time.sleep(0.5/self.freq)  # Give the slave time to respond
             if GPIO.input(self.MISO):
                 data |= 0b1
             data <<= 1
@@ -123,11 +129,12 @@ class SPI_Slave():
         GPIO.output(self.MISO, GPIO.HIGH)
         GPIO.add_event_detect(self.CS,
                               GPIO.FALLING,
-                              callback=self.recieve_command,
-                              bouncetime=10)
+                              callback=self.recieve_command)
+        print("Event detection added")
 
     def recieve_command(self, channel):
         '''Reads data from the master to recieve the command (8-bit)'''
+        GPIO.output(self.MISO, GPIO.LOW)
         command = self._readBitsFromMaster(8)
         print("Command recieved:", bin(command))
         '''
@@ -139,7 +146,7 @@ class SPI_Slave():
         recieve = (command & 0b10000000) >> 7
         channel = (command & 0b01110000) >> 4
         num_bits = command & 0b00001111
-        print(recieve, command, num_bits)
+        print(recieve, channel, num_bits)
         if recieve:
             self._recieve_data(channel, num_bits)
         else:
@@ -167,7 +174,7 @@ class SPI_Slave():
             print('Recieve: Invalid SPI channel number, must be in range 0-7', channel)
             return
         # Read the data
-        self.channel[channel] = self._readBitsFromMaster(num_bits)
+        self.channels[channel] = self._readBitsFromMaster(num_bits)
 
     def _send_data(self, channel, num_bits):
         '''Send the data from the channel'''
