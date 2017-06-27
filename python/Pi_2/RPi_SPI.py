@@ -133,7 +133,7 @@ class SPI_Slave():
         process.start()
         print("SPI: waiting for command")
 
-    def recieve_command(self, channel):
+    def recieve_command(self):
         '''Reads data from the master to recieve the command (8-bit)'''
         GPIO.wait_for_edge(self.CS, GPIO.FALLING)
         command = self._readBitsFromMaster(8)
@@ -194,6 +194,8 @@ class SPI_Slave():
             GPIO.wait_for_edge(self.CLK, GPIO.FALLING)
             if data/dec_value >= 1:
                 GPIO.output(self.MISO, GPIO.HIGH)
+                print("SPI: sending bit 1")
                 data -= dec_value
             else:
+                print("SPI: sending bit 0")
                 GPIO.output(self.MISO, GPIO.LOW)

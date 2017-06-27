@@ -29,7 +29,7 @@ MISO = 16
 MOSI = 18
 CS = 22
 SPI = SPI_Slave(CLK, MISO, MOSI, CS)
-# Set channel 0 to1 to show slave is active
+# Set channel 0 to 1 to show slave is active
 SPI.channels[0] = 1
 PiCam_2 = PiCam()
 ImP = None  # TODO Setup UART communication for ImP
