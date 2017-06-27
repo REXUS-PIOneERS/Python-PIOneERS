@@ -197,17 +197,24 @@ class IMU():
                 'y': self.readMagAxis(1),
                 'z': self.readMagAxis(2)}
 
-    def take_measurements_process(self, freq, file_name):
+    def take_measurements_process(self, freq, file_name, cut=None):
         '''
         Generates a python process for taking measurements with the IMU.
+
+        Returns a pipe for recieving values from the IMU in the form
+        [acc, mag, gyr] where acc, mag and gyr are dictionaries containing the
+        keys 'x', 'y' and 'z'
         '''
         exit_flag = multiprocessing.Value('i', 0)
+        # Creates a queue where data will be stored (max size of 100)
+        pipe_1, pipe_2 = multiprocessing.Pipe()
         p = multiprocessing.Process(target=self._take_measurements,
-                                    args=(freq, file_name, exit_flag))
+                                    args=(freq, file_name, cut, exit_flag, pipe_1))
         self._processes.append(p)
         self._flags.append(exit_flag)
         p.start()
-        return True
+        # Return the queue so user can access values if desired
+        return pipe_2
 
     def end_measurements_processes(self):
         '''
@@ -223,30 +230,40 @@ class IMU():
 
         return
 
-    def _take_measurements(self, freq, file_name, exit_flag):
+    def _take_measurements(self, freq, file_name, cut, exit_flag, pipe):
         '''
         Reads from all activated sensors at the specified frequency and saves
-        to the location in save_file for seconds denoted by time.
+        to the location in the given file name.
+
+        If cut is set, a new file will be written to every n seconds (where n
+        is denoted by the vaiable cut)
         '''
         try:
             with exit_flag.get_lock():
                 local_flag = exit_flag.value
 
-            with open('{}.txt'.format(file_name),'w') as file:
-                while local_flag == 0:
-                    # Take lots of measurements!
-                    acc = self.readAcc()
-                    mag = self.readMag()
-                    gyr = self.readGyr()
-
-                    file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag: '
-                                   '{} {} {}\n').format(
-                                           acc['x'], acc['y'], acc['z'],
-                                           gyr['x'], gyr['y'], gyr['z'],
-                                           mag['x'], mag['y'], mag['z'])
-                    file.write(file_output)
-                    with exit_flag.get_lock():
-                        local_flag = exit_flag.value
-                    time.sleep(1/freq)
+            while local_flag == 0:
+                if cut is not None:
+                    n = 0
+                    # Creates a new file every cut seconds
+                    for i in range(0, cut*freq):
+                        file_path = '{}_{}.txt'.format(file_name, n)
+                        n += 1
+                        with open(file_path, 'w') as file:
+                            # Take lots of measurements
+                            acc = self.readAcc()
+                            mag = self.readMag()
+                            gyr = self.readGyr()
+                            file_output = ('Acc: {} {} {} Gyr: {} {} {} Mag: '
+                                           '{} {} {}\n').format(
+                                               acc['x'], acc['y'], acc['z'],
+                                               gyr['x'], gyr['y'], gyr['z'],
+                                               mag['x'], mag['y'], mag['z'])
+                            file.write(file_output)
+                            pipe.send([acc, mag, gyr])
+                            with exit_flag.get_lock():
+                                local_flag = exit_flag.value
+                            time.sleep(1/freq)
+            pipe.close()
         except SensorInactiveError as e:
             print(e.message)

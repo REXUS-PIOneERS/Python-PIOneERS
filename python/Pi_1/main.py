@@ -71,9 +71,16 @@ def start_of_experiment():
     print('start of experiment')
     flash_led()
     # Activate the IMU
-    IMU_1.take_measurements_process(1, 'IMU_Test')
+    conn = IMU_1.take_measurements_process(5, 'IMU_Test', 5)
     # TODO Motor Deplyment
+    n = 0
     while not GPIO.input(REXUS_SODS):
+        n += 1
+        # TODO Send measurements back to ground
+        # Get measurement from Pi_2 (ImP and IMU)
+        if n == 10:
+            print(conn.recv())
+            n = 0
         time.sleep(0.1)
     start_of_data_storage()
 
