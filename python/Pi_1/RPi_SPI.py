@@ -121,10 +121,16 @@ class SPI_Slave():
         GPIO.setup(self.MOSI, GPIO.IN)
         GPIO.setup(self.MISO, GPIO.OUT)
         GPIO.setup(self.CS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # Setup data registers
-        self.channels = [0 for i in range(7)]
+        # Setup data registers (array of 10 32-bit ints)
+        self._channels = multiprocessing.Array('l', 10)
         # Activate spi connection
         self.activate_spi_line()
+
+    @property
+    def channels(self):
+        '''Used for accessing the data in the channels variable'''
+        with self._channels.getlock():
+            return self._channels
 
     def activate_spi_line(self):
         '''Pull output pins high, setup detect for CS'''
