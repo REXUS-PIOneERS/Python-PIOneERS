@@ -15,6 +15,7 @@ def ensure_dir(file_path):
     if not file_path.exists():
         file_path.mkdir(parents=True)
 
+
 class SensorInactiveError(Exception):
     '''Exception raised when attempt to access inactive sensor
 
@@ -26,6 +27,7 @@ class SensorInactiveError(Exception):
         self.sensor = sensor
         self.message = ('Attempted to read data from the {} failed due to'
                         ' inactive sensor').format(sensor)
+
 
 class IMU():
     '''
@@ -67,7 +69,6 @@ class IMU():
         self.reset_registers()
         self.bus.close()
 
-
     def reset_registers(self):
         '''
         Reset all registers for the accelerometer, gyro and magnetometer to
@@ -103,7 +104,7 @@ class IMU():
         self._mag_active = True
         self._gyr_active = True
 
-    def writeReg(self, address, register,value):
+    def writeReg(self, address, register, value):
         '''Used to write values to various addresses for setting up the IMU'''
         self.bus.write_byte_data(address, register, value)
         return -1
@@ -223,7 +224,7 @@ class IMU():
         self._processes.append(p)
         self._flags.append(exit_flag)
         p.start()
-        # Return the queue so user can access values if desired
+        # Return the pipe so user can access values if desired
         return pipe_2
 
     def end_measurements_processes(self):

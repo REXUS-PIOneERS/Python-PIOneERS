@@ -24,11 +24,13 @@ GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(OUT_LED, GPIO.OUT)
 
 # Setup classes for ImP, SPI and PiCam
-CLK = 18
-MISO = 23
-MOSI = 24
-CS = 25
+CLK = 12
+MISO = 16
+MOSI = 18
+CS = 22
 SPI = SPI_Slave(CLK, MISO, MOSI, CS)
+# Set channel 0 to1 to show slave is active
+SPI.channels[0] = 1
 PiCam_2 = PiCam()
 ImP = None  # TODO Setup UART communication for ImP
 

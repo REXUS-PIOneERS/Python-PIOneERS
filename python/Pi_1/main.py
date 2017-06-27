@@ -33,7 +33,7 @@ SPI = SPI_Master(CLK, MISO, MOSI, CS)
 
 # Output pins
 OUT_LED = 37
-MOTOR = None # TODO Set up PWM for motor
+MOTOR = None  # TODO Set up PWM for motor
 GPIO.setup(OUT_LED, GPIO.OUT)
 
 # TODO Pins for UART Communication with the IMP
@@ -77,10 +77,11 @@ def start_of_experiment():
     while not GPIO.input(REXUS_SODS):
         n += 1
         # TODO Send measurements back to ground
-        # Get measurement from Pi_2 (ImP and IMU)
         if n == 10:
-            print(conn.recv())
             n = 0
+            # Get data from IMU_1
+            print(conn.recv())
+            # TODO Get IMP and IMU_2 data via SPI
         time.sleep(0.1)
     start_of_data_storage()
 
@@ -100,6 +101,12 @@ def lift_off():
 def main():
     '''Main entry point for the probram'''
     flash_led()
+    # Channel 0 will be equal to 1 when slave is active
+    slave_active = SPI.request_data(0, 8)
+    if not slave_active:
+        print("SPI communication with slave failed")
+    else:
+        print("SPI communication with slave succeeded")
     # TODO Check for Hardware Test Mode- GPIO??
     # TODO Check System Status
     while 1:
