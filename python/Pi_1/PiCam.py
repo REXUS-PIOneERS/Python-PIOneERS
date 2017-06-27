@@ -54,7 +54,8 @@ class PiCam():
                 flag.value = 1
         # Wait for each process to finish
         for i, process in enumerate(self._processes):
-            process.join('Camera Process {} joined'.format(i))
+            process.join()
+            print("Camera Process {} joined".format(i))
 
     def _cut_video_process(self, file_name, cut_length, flag):
         '''Records a video of the given length cur into segments'''

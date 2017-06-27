@@ -25,10 +25,10 @@ GPIO.setup(REXUS_SOE, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(REXUS_SODS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # Pins for SPI Communication
-CLK = 18  # clock
-MISO = 23  # Master in Slave out, used to transmit FROM the Slave device
-MOSI = 24  # Master out Slave in, used to transmit FROM the Master device
-CS = 25  # Chip select
+CLK = 29  # clock
+MISO = 31  # Master in Slave out, used to transmit FROM the Slave device
+MOSI = 33  # Master out Slave in, used to transmit FROM the Master device
+CS = 35  # Chip select
 SPI = SPI_Master(CLK, MISO, MOSI, CS)
 
 # Output pins

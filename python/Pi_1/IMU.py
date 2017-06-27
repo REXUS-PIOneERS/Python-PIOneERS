@@ -6,6 +6,14 @@ import smbus
 from LSM9DS0 import *
 import multiprocessing
 import time
+from pathlib import Path
+import os
+
+
+def ensure_dir(file_path):
+    '''Create a directory if it doesn't exist'''
+    if not file_path.exists():
+        file_path.mkdir(parents=True)
 
 class SensorInactiveError(Exception):
     '''Exception raised when attempt to access inactive sensor
@@ -51,6 +59,8 @@ class IMU():
         self._acc_active = False
         self._gyr_active = False
         self._mag_active = False
+        self.save_path = Path(os.path.dirname(__file__)) / 'IMU_Data'
+        ensure_dir(self.save_path)
 
     def __exit__(self):
         '''Reset all registers and close the bus'''
@@ -247,9 +257,9 @@ class IMU():
                     n = 0
                     # Creates a new file every cut seconds
                     for i in range(0, cut*freq):
-                        file_path = '{}_{}.txt'.format(file_name, n)
+                        file_path = self.save_path / '{}_{}.txt'.format(file_name, n)
                         n += 1
-                        with open(file_path, 'w') as file:
+                        with open(str(file_path), 'w') as file:
                             # Take lots of measurements
                             acc = self.readAcc()
                             mag = self.readMag()
