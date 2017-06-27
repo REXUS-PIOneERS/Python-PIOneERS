@@ -129,7 +129,7 @@ class SPI_Slave():
     @property
     def channels(self):
         '''Used for accessing the data in the channels variable'''
-        with self._channels.getlock():
+        with self._channels.get_lock():
             return self._channels
 
     def activate_spi_line(self):
@@ -139,7 +139,7 @@ class SPI_Slave():
         process.start()
         print("SPI: waiting for command")
 
-    def recieve_command(self, channel):
+    def recieve_command(self):
         '''Reads data from the master to recieve the command (8-bit)'''
         GPIO.wait_for_edge(self.CS, GPIO.FALLING)
         command = self._readBitsFromMaster(8)
