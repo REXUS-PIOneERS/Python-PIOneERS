@@ -66,7 +66,7 @@ def lift_off():
     print('LIFT OFF!!!')
     flash_led()
     if not PiCam_2.active:
-        PiCam_2.video(10, 'LO_test')
+        PiCam_2.background_record_process('video', 5)
     while not GPIO.input(REXUS_SOE):
         # TODO Send occasional messages to ground reporting status
         time.sleep(0.1)
@@ -84,7 +84,7 @@ def main():
         if Response == 'Test Mode':
             break
         if Response == 'T-10':
-            PiCam_2.background_record_process("Cam2", 5)
+            PiCam_2.background_record_process("video", 5)
         if GPIO.input(REXUS_LO):
             lift_off()
             break

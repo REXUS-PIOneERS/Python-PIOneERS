@@ -29,7 +29,7 @@ CLK = 29  # clock
 MISO = 31  # Master in Slave out, used to transmit FROM the Slave device
 MOSI = 33  # Master out Slave in, used to transmit FROM the Master device
 CS = 35  # Chip select
-SPI = SPI_Master(CLK, MISO, MOSI, CS)
+SPI = SPI_Master(CLK, MISO, MOSI, CS, freq=100)
 
 # Output pins
 OUT_LED = 37

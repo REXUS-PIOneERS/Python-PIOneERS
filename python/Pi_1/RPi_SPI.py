@@ -42,7 +42,7 @@ class SPI_Master():
         GPIO.output(self.CS, GPIO.HIGH)
         GPIO.output(self.CS, GPIO.LOW)
         # Wait for acknoweldge from Slave
-        time.sleep(0.01)
+        time.sleep(0.1)
         self._sendBitsFromMaster(command, 8)
         # Sleep for a bit to give the slave time to prepare
         # time.sleep(0.1)
@@ -64,7 +64,7 @@ class SPI_Master():
         # Pull CS Low to prepare for recieving command
         GPIO.output(self.CS, GPIO.HIGH)
         GPIO.output(self.CS, GPIO.LOW)
-        time.sleep(0.01)
+        time.sleep(0.1)
         self._sendBitsFromMaster(command, 8)
         # Sleep to give slave time to respond
         # time.sleep(0.1)
